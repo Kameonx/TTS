@@ -66,13 +66,17 @@
         input[type="submit"]:hover {
             background-color: #0056b3;
         }
+        .warning {
+            color: red;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body class="dark-mode">
     <div class="container">
-        <form action="/convert" method="post">
-            <select name="lang" id="lang">
-                <option value="" disabled selected>Select English Accent:</option>
+        <form id="ttsForm" action="/convert" method="post" onsubmit="return validateForm()">
+            <select name="lang" id="lang" required>
+                <option value="" disabled selected>Select English Accent (Default - US):</option>
                 <option value="en">US</option>
                 <option value="en-uk">UK</option>
                 <option value="en-au">Australia</option>
@@ -85,6 +89,7 @@
             </select>
             <textarea name="text" placeholder="Enter your text here..."></textarea><br>
             <input type="submit" value="Convert to Speech">
+            <div id="warning" class="warning" style="display:none;">Please enter some text to convert.</div>
         </form>
     </div>
 
@@ -93,6 +98,18 @@
         const body = document.body;
         body.classList.remove('light-mode');
         body.classList.add('dark-mode');
+
+        function validateForm() {
+            const text = document.getElementById('ttsForm').elements['text'].value;
+            const warningDiv = document.getElementById('warning');
+            if (text.trim() === '') {
+                warningDiv.style.display = 'block';
+                return false; // Prevent form submission
+            } else {
+                warningDiv.style.display = 'none';
+                return true; // Allow form submission
+            }
+        }
     </script>
 </body>
 </html>
