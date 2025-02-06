@@ -51,10 +51,12 @@ def convert():
     logging.info(f"Received language: {lang}")
 
     if not text:
+        logging.warning("No text provided")
         flash("No text provided", 'warning')
         return redirect(url_for('index'))
 
     if lang not in supported_languages:
+        logging.error(f"Unsupported language selected: {lang}")
         flash("Unsupported language selected", 'error')
         return redirect(url_for('index'))
 
@@ -71,7 +73,7 @@ def convert():
         tts = gTTS(text=text, lang=lang, tld=tld, slow=False, lang_check=True)
         tts.save(filepath)
         logging.info(f"File saved to: {filepath}")
-        return send_file(filepath, as_attachment=True, download_name=filename)
+        return send_file(filepath, as_attachment=True, download_name=filename, mimetype='audio/mpeg')
     except gTTSError as e:
         logging.error(f"gTTS error: {str(e)} for language {lang} with TLD {tld}")
         flash(f"Error converting text to speech for language {lang} with TLD {tld}: {str(e)}", 'error')
