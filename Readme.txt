@@ -3,6 +3,11 @@ TTS Application README
 ---
 
 🎤 Using the TTS Application 
+
+🐍 Visit the web app hosted here: https://kameon2.pythonanywhere.com/
+
+😿 If the site is down you may also follow the steps below:
+
 1. Download and Extract the contents of the Zipped folder.
 2. Open the TTS folder and double click the app.py.
 3. Ctrl + Left Click on the 'http://' address that appears in the cmd window.
@@ -11,12 +16,14 @@ TTS Application README
 6. Press the 'Convert to Speech' button.
 7. Your .mp3 download should start.
 
+---
+
 ❗ Notes 
 - Voice Setting: Only one voice is available (female).
 
 --- 
 
-This is my first ever Application, super unofficial, so idk. Feedback is always welcome!
+This is my first ever Application! Feedback is always welcome!
 
 Website: https://www.kameon.net
 Email: Kameon@live.com
