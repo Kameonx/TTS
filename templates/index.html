@@ -9,100 +9,119 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        body.light-mode {
-            background-color: #f4f4f9;
-            color: #000; /* Black text in light mode */
-        }
-        body.dark-mode {
             background-color: #121212;
-            color: #fff; /* White text in dark mode */
+            color: #fff;
         }
+
         .container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            background-color: #2d2d2d;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 800px;
-            position: relative;
         }
+
         form {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 1rem;
         }
-        textarea {
-            width: calc(100% - 44px); /* Double the size */
-            height: 200px; /* Double the size */
-            resize: vertical;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            box-sizing: border-box;
+
+        select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #333;
+            color: #fff;
+            font-size: 1rem;
         }
-        select {
-            width: calc(100% - 22px); /* Adjusted to fit within the container */
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-        }
+
         input[type="submit"] {
             background-color: #007bff;
-            color: #fff;
+            color: white;
+            padding: 0.8rem 1.5rem;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
         }
+
         input[type="submit"]:hover {
             background-color: #0056b3;
         }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+            color: #856404;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
         .warning {
-            color: red;
-            margin-bottom: 10px;
+            color: #ff4444;
+            display: none;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
-<body class="dark-mode">
+<body>
     <div class="container">
-        <form id="ttsForm" action="/convert" method="post" onsubmit="return validateForm()">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form id="ttsForm" action="/convert" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
             <select name="lang" id="lang" required>
-                <option value="" disabled selected>Select Language:</option>
+                <option value="" disabled selected>Select Accent (Female only):</option>
                 {% for code, name in supported_languages.items() %}
                 <option value="{{ code }}">{{ name }}</option>
                 {% endfor %}
             </select>
-            <textarea name="text" placeholder="Enter your text here..."></textarea><br>
+
+            <textarea name="text" placeholder="Enter your text here..." rows="6"></textarea>
+
+            <div id="warning" class="warning">
+                Please enter some text to convert
+            </div>
+
             <input type="submit" value="Convert to Speech">
-            <div id="warning" class="warning" style="display:none;">Please enter some text to convert.</div>
         </form>
     </div>
 
     <script>
-        // Ensure the default mode is dark mode
-        const body = document.body;
-        body.classList.remove('light-mode');
-        body.classList.add('dark-mode');
-
         function validateForm() {
-            const text = document.getElementById('ttsForm').elements['text'].value;
+            const textInput = document.querySelector('textarea[name="text"]');
             const warningDiv = document.getElementById('warning');
-            if (text.trim() === '') {
+            
+            if (!textInput.value.trim()) {
                 warningDiv.style.display = 'block';
-                return false; // Prevent form submission
-            } else {
-                warningDiv.style.display = 'none';
-                return true; // Allow form submission
+                return false;
             }
+            warningDiv.style.display = 'none';
+            return true;
         }
     </script>
 </body>
