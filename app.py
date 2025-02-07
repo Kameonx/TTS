@@ -1,29 +1,25 @@
-from flask import Flask, request, send_file, render_template, flash, redirect, url_for
+from flask import Flask, request, send_file, render_template, flash, redirect, url_for, make_response
 from gtts import gTTS, gTTSError
 from datetime import datetime
-import os
+from io import BytesIO
 import logging
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = '/home/Kameon2/TTS/downloads'  # Ensure this directory exists and is writable
-app.secret_key = 'your_secret_key'  # Needed for flashing messages
+app.secret_key = 'your_secret_key_here'  # Change this to a secure secret key
 
-# Ensure the upload folder exists
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-# List of supported gTTS language codes and their display names
+# Supported languages and their display names
 supported_languages = {
-    'en': 'English (US)',
-    'en-gb': 'English (UK)',
-    'en-au': 'English (Australia)',
-    'en-in': 'English (India)',
-    'es': 'Spanish (Spain)',
+    'en': 'US',
+    'en-gb': 'UK',
+    'en-au': 'Australia',
+    'en-in': 'India',
+    'es': 'Spain',
     'es-us': 'Spanish (US)',
-    'fr': 'French (France)',
-    'de': 'German (Germany)',
+    'fr': 'France',
+    'de': 'Germany',
 }
 
-# Mapping of language codes to TLDs
+# Language code to Google TLD mapping
 language_to_tld = {
     'en': 'com',
     'en-gb': 'co.uk',
@@ -44,43 +40,52 @@ def index():
 
 @app.route('/convert', methods=['POST'])
 def convert():
-    text = request.form.get('text')
-    lang = request.form.get('lang', 'en')  # Default to 'en' if not found
-
-    logging.info(f"Received text: {text}")
-    logging.info(f"Received language: {lang}")
-
-    if not text:
-        logging.warning("No text provided")
-        flash("No text provided", 'warning')
-        return redirect(url_for('index'))
-
-    if lang not in supported_languages:
-        logging.error(f"Unsupported language selected: {lang}")
-        flash("Unsupported language selected", 'error')
-        return redirect(url_for('index'))
-
-    # Get the appropriate TLD for the selected language
-    tld = language_to_tld.get(lang, 'com')
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"textToSpeech_{timestamp}.mp3"
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-
     try:
-        # Ensure text is UTF-8 encoded
-        text = text.encode('utf-8').decode('utf-8')
-        tts = gTTS(text=text, lang=lang, tld=tld, slow=False, lang_check=True)
-        tts.save(filepath)
-        logging.info(f"File saved to: {filepath}")
-        return send_file(filepath, as_attachment=True, download_name=filename, mimetype='audio/mpeg')
+        # Get form data
+        text = request.form['text'].strip()
+        lang = request.form.get('lang', 'en')
+
+        # Validate input
+        if not text:
+            flash("Please enter some text to convert", 'warning')
+            return redirect(url_for('index'))
+            
+        if lang not in supported_languages:
+            flash("Unsupported language selected", 'error')
+            return redirect(url_for('index'))
+
+        # Generate filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"textToSpeech_{timestamp}.mp3"
+
+        # Create in-memory audio file
+        audio_buffer = BytesIO()
+        tts = gTTS(
+            text=text,
+            lang=lang,
+            tld=language_to_tld.get(lang, 'com'),
+            slow=False
+        )
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+
+        # Create response with proper headers
+        response = make_response(audio_buffer.read())
+        response.headers['Content-Type'] = 'audio/mpeg'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
+
+    except KeyError:
+        flash("Invalid form submission", 'error')
+        return redirect(url_for('index'))
     except gTTSError as e:
-        logging.error(f"gTTS error: {str(e)} for language {lang} with TLD {tld}")
-        flash(f"Error converting text to speech for language {lang} with TLD {tld}: {str(e)}", 'error')
+        logging.error(f"gTTS Error: {str(e)}")
+        flash(f"Conversion error: {str(e)}", 'error')
         return redirect(url_for('index'))
     except Exception as e:
-        logging.error(f"Unexpected error: {str(e)} for language {lang} with TLD {tld}")
-        flash(f"An unexpected error occurred for language {lang} with TLD {tld}: {str(e)}", 'error')
+        logging.error(f"Unexpected Error: {str(e)}")
+        flash(f"An unexpected error occurred: {str(e)}", 'error')
         return redirect(url_for('index'))
 
 if __name__ == '__main__':
