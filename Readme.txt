@@ -4,7 +4,7 @@ TTS Application README
 
 🎤 Using the TTS Application 
 
-🐍 Visit the web app hosted here: https://kameon2.pythonanywhere.com/
+🐍 Visit the web app hosted here: https://tts-5oe2.onrender.com/
 
 😿 If the site is down you may also follow the steps below:
 
