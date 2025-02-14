@@ -79,6 +79,34 @@
             display: none;
             margin-bottom: 1rem;
         }
+
+        #previewBtn {
+            margin-top: 0.5rem;
+            background-color: #28a745 !important;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        #previewBtn:hover {
+            background-color: #218838 !important;
+        }
+
+        audio {
+            background-color: #333;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        audio::-webkit-media-controls-panel {
+            background-color: #333;
+        }
     </style>
 </head>
 <body>
@@ -107,6 +135,18 @@
                 Please enter some text to convert
             </div>
 
+            <button type="button" id="previewBtn" onclick="handlePreview()">
+                Preview Audio
+            </button>
+
+            <audio id="audioPlayer" controls>
+                Your browser does not support the audio element.
+            </audio>
+
+            <div id="previewError" class="warning" style="display: none;">
+                Error generating preview
+            </div>
+
             <input type="submit" value="Convert to Speech">
         </form>
     </div>
@@ -122,6 +162,45 @@
             }
             warningDiv.style.display = 'none';
             return true;
+        }
+
+        function handlePreview() {
+            const textInput = document.querySelector('textarea[name="text"]');
+            const langSelect = document.querySelector('select[name="lang"]');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const previewError = document.getElementById('previewError');
+
+            if (!textInput.value.trim()) {
+                previewError.textContent = "Please enter some text to preview";
+                previewError.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('text', textInput.value);
+            formData.append('lang', langSelect.value);
+
+            previewError.style.display = 'none';
+            audioPlayer.style.display = 'none';
+
+            fetch('/preview', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Preview failed');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                audioPlayer.src = url;
+                audioPlayer.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Preview error:', error);
+                previewError.textContent = "Error generating audio preview";
+                previewError.style.display = 'block';
+            });
         }
     </script>
 </body>
