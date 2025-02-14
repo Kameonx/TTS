@@ -88,5 +88,32 @@ def convert():
         flash(f"An unexpected error occurred: {str(e)}", 'error')
         return redirect(url_for('index'))
 
+@app.route('/preview', methods=['POST'])
+def preview():
+    try:
+        text = request.form['text'].strip()
+        lang = request.form.get('lang', 'en')
+        
+        if not text or lang not in supported_languages:
+            return '', 400
+
+        audio_buffer = BytesIO()
+        tts = gTTS(
+            text=text,
+            lang=lang,
+            tld=language_to_tld.get(lang, 'com'),
+            slow=False
+        )
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+
+        response = make_response(audio_buffer.read())
+        response.headers['Content-Type'] = 'audio/mpeg'
+        return response
+
+    except Exception as e:
+        logging.error(f"Preview error: {str(e)}")
+        return '', 500
+
 if __name__ == '__main__':
     app.run(debug=True)
